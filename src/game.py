@@ -12,11 +12,12 @@ class Game:
         self.grid_size = 9
         self.min_cell_size = 80
         self.assets = AssetManager()
-        self.bg_padding = 96  # Adjust this value to control background extension
+        self.bg_padding = 67  # Adjust this value to control background extension
+        self.window_padding = 150  # Increase padding from edges
 
     def get_cell_size(self):
-        width_based = (self.window_width - 100) // self.grid_size
-        height_based = (self.window_height - 100) // self.grid_size
+        width_based = (self.window_width - self.window_padding) // self.grid_size
+        height_based = (self.window_height - self.window_padding) // self.grid_size
         return max(min(width_based, height_based), self.min_cell_size)
 
     def draw(self, screen):

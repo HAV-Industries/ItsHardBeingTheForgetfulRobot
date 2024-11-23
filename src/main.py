@@ -1,3 +1,9 @@
+"""
+TODO:
+Currently the robot can run more than once. Make it so once you run, that's it and the run button is disabled until you reset.
+Add tutorial + the help menu
+"""
+
 import pygame
 import sys
 import os

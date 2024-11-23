@@ -1,6 +1,7 @@
 import pygame
 from assets import AssetManager
 import random
+import copy  # Added for deep copying the grid
 
 # Colors
 BLACK = (0, 0, 0)
@@ -23,6 +24,14 @@ class Game:
         self.panel_margin = 20  # Margin for the right panel
         self.font = pygame.font.Font(None, 36)
         self.instructions = []  # List to store movement instructions
+        self.food_level = 0  # Initialize food level
+        self.robot_position = (
+            self.grid_size - 1,
+            self.grid_size - 1,
+        )  # Start at bottom right
+        self.initial_grid = []  # To store initial grid for reset
+        self.is_running = False  # Flag to check if instructions are being executed
+        self.current_instruction_index = 0  # To track current instruction
         self.button_size = 40
         self.clear_button_size = 30
         self.instruction_rects = []  # Store rectangles for instruction text
@@ -32,6 +41,11 @@ class Game:
             [None for _ in range(self.grid_size)] for _ in range(self.grid_size)
         ]
         self.initialize_crops()
+        self.initial_grid = copy.deepcopy(self.grid)  # Store initial grid
+
+        # Create Run and Reset buttons
+        self.run_button = pygame.Rect(0, 0, 100, 40)
+        self.reset_button = pygame.Rect(0, 0, 100, 40)
 
     def initialize_crops(self):
         # Place random crops in about 1/3 of the grid spaces
@@ -111,7 +125,59 @@ class Game:
             if button.collidepoint(pos):
                 self.instructions.append(action)
                 return True
+
+        # Check Run button
+        if self.run_button.collidepoint(pos):
+            if not self.is_running:
+                self.is_running = True
+                self.current_instruction_index = 0
+            return True
+
+        # Check Reset button
+        if self.reset_button.collidepoint(pos):
+            self.reset_game()
+            return True
+
         return False
+
+    def reset_game(self):
+        self.grid = copy.deepcopy(self.initial_grid)  # Reset grid to initial state
+        self.robot_position = (
+            self.grid_size - 1,
+            self.grid_size - 1,
+        )  # Reset robot position
+        self.instructions = []  # Clear instructions
+        self.food_level = 0  # Reset food level
+        self.is_running = False  # Stop running
+        self.current_instruction_index = 0  # Reset instruction index
+
+    def execute_instruction(self, instruction):
+        x, y = self.robot_position
+        if instruction == "up":
+            if y > 0:
+                self.robot_position = (x, y - 1)
+        elif instruction == "down":
+            if y < self.grid_size - 1:
+                self.robot_position = (x, y + 1)
+        elif instruction == "left":
+            if x > 0:
+                self.robot_position = (x - 1, y)
+        elif instruction == "right":
+            if x < self.grid_size - 1:
+                self.robot_position = (x + 1, y)
+        elif instruction == "harvest":
+            if self.grid[y][x]:
+                self.grid[y][x] = None
+                self.food_level += 1
+
+    def update(self):
+        if self.is_running and self.current_instruction_index < len(self.instructions):
+            instruction = self.instructions[self.current_instruction_index]
+            self.execute_instruction(instruction)
+            self.current_instruction_index += 1
+            # You can add a delay here if you want instructions to execute with time gaps
+            if self.current_instruction_index >= len(self.instructions):
+                self.is_running = False
 
     def draw(self, screen):
         # Calculate grid dimensions
@@ -200,6 +266,27 @@ class Game:
             text_rect = text.get_rect(center=button.center)
             screen.blit(text, text_rect)
 
+        # Draw Run and Reset buttons
+        if not self.is_running:
+            self.run_button.topleft = (panel_x + 10, panel_y + 10)
+            pygame.draw.rect(screen, BUTTON_COLOR, self.run_button, border_radius=5)
+            run_text = self.font.render("Run", True, WHITE)
+            run_text_rect = run_text.get_rect(center=self.run_button.center)
+            screen.blit(run_text, run_text_rect)
+
+        self.reset_button.topleft = (panel_x + panel_width - 110, panel_y + 10)
+        pygame.draw.rect(screen, BUTTON_COLOR, self.reset_button, border_radius=5)
+        reset_text = self.font.render("Reset", True, WHITE)
+        reset_text_rect = reset_text.get_rect(center=self.reset_button.center)
+        screen.blit(reset_text, reset_text_rect)
+
+        # Draw Food Level counter
+        food_text = self.font.render(f"Food Level: {self.food_level}", True, WHITE)
+        food_rect = food_text.get_rect(
+            topright=(panel_x + panel_width - 10, panel_y + 60)
+        )
+        screen.blit(food_text, food_rect)
+
         # Draw instructions panel
         instructions_width = panel_width - 20
         instructions_height = panel_height // 3
@@ -253,9 +340,20 @@ class Game:
             self.instruction_rects.append(text_rect)
             instruction_y += 30
 
-        # Draw robot at bottom left of grid
+        # Draw robot at current position
         robot_sprite = self.assets.get_robot_sprite()
         if robot_sprite:
-            robot_x = start_x + cell_size // 2 - robot_sprite.get_width() // 2
-            robot_y = start_y + grid_pixel_size - robot_sprite.get_height() - 10
+            robot_x = (
+                start_x
+                + self.robot_position[0] * cell_size
+                + (cell_size - robot_sprite.get_width()) // 2
+            )
+            robot_y = (
+                start_y
+                + self.robot_position[1] * cell_size
+                + (cell_size - robot_sprite.get_height()) // 2
+            )
             screen.blit(robot_sprite, (robot_x, robot_y))
+
+        # Call update method in the main loop
+        self.update()

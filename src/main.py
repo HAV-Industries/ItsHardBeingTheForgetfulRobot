@@ -66,9 +66,25 @@ class GameController:
                 elif event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_F11:
                         self.toggle_fullscreen()
-                elif event.type == pygame.KEYUP:
-                    if event.key == pygame.K_ESCAPE and self.is_fullscreen:
+                    elif event.key == pygame.K_ESCAPE and self.is_fullscreen:
                         self.toggle_fullscreen()
+                    elif event.key in [
+                        pygame.K_UP,
+                        pygame.K_DOWN,
+                        pygame.K_LEFT,
+                        pygame.K_RIGHT,
+                    ]:
+                        direction = None
+                        if event.key == pygame.K_UP:
+                            direction = "up"
+                        elif event.key == pygame.K_DOWN:
+                            direction = "down"
+                        elif event.key == pygame.K_LEFT:
+                            direction = "left"
+                        elif event.key == pygame.K_RIGHT:
+                            direction = "right"
+                        if direction:
+                            self.game.instructions.append(direction)
                 elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                     if self.current_screen == GAME_SCREEN:
                         self.game.handle_button_click(event.pos)
@@ -90,4 +106,10 @@ class GameController:
 
 if __name__ == "__main__":
     game = GameController()
+    """
+    pygame.mixer.music.load(
+        os.path.join(os.path.dirname(__file__), "music", "sfx/bg.mp3")
+    )
+    pygame.mixer.music.play(-1)  # Loop the music indefinitely
+    """
     game.run()

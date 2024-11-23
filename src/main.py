@@ -27,7 +27,9 @@ class GameController:
         self.window_height = WINDOW_HEIGHT
         # Remove resizable flag
         self.screen = pygame.display.set_mode((self.window_width, self.window_height))
-        pygame.display.set_caption("The Robot has Taken Over!")
+        pygame.display.set_caption(
+            "It's Hard Being the Forgetful Robot | Es Difícil Ser el Robot Olvidadizo"
+        )
 
         self.is_fullscreen = False
         self.current_screen = TITLE_SCREEN
@@ -67,6 +69,9 @@ class GameController:
                 elif event.type == pygame.KEYUP:
                     if event.key == pygame.K_ESCAPE and self.is_fullscreen:
                         self.toggle_fullscreen()
+                elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                    if self.current_screen == GAME_SCREEN:
+                        self.game.handle_button_click(event.pos)
 
             # Clear screen
             self.screen.fill((255, 255, 255))

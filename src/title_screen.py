@@ -25,7 +25,9 @@ class TitleScreen:
         screen.blit(self.background, (0, 0))
 
         # Draw title
-        title = "The Robot has Taken Over!"
+        title = (
+            "It's Hard Being the Forgetful Robot | Es Difícil Ser el Robot Olvidadizo"
+        )
         title_surface = self.font.render(title, True, DARK_GRAY)
         title_rect = title_surface.get_rect(center=(self.window_width // 2, 200))
         screen.blit(title_surface, title_rect)

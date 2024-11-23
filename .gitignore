@@ -1,1 +1,4 @@
 /temp
+/env
+/.vscode
+*/build

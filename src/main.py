@@ -1,7 +1,10 @@
 import pygame
 import sys
+import os
 from title_screen import TitleScreen
 from game import Game
+import time
+
 
 # Constants
 WINDOW_WIDTH = 1280  # Changed from 1920
@@ -15,6 +18,11 @@ GAME_SCREEN = 1
 class GameController:
     def __init__(self):
         pygame.init()
+        # Set game icon
+        icon_path = os.path.join(os.path.dirname(__file__), "img", "icon.png")
+        icon = pygame.image.load(icon_path)
+        pygame.display.set_icon(icon)
+
         self.window_width = WINDOW_WIDTH
         self.window_height = WINDOW_HEIGHT
         # Remove resizable flag
@@ -48,7 +56,8 @@ class GameController:
     def run(self):
         while True:
             # Event handling
-            for event in pygame.event.get():
+            events = pygame.event.get()
+            for event in events:
                 if event.type == pygame.QUIT:
                     pygame.quit()
                     sys.exit()
@@ -58,7 +67,6 @@ class GameController:
                 elif event.type == pygame.KEYUP:
                     if event.key == pygame.K_ESCAPE and self.is_fullscreen:
                         self.toggle_fullscreen()
-                # Remove VIDEORESIZE and WINDOWMAXIMIZED event handling
 
             # Clear screen
             self.screen.fill((255, 255, 255))
@@ -68,7 +76,7 @@ class GameController:
                 if self.title_screen.draw(self.screen):
                     self.current_screen = GAME_SCREEN
             elif self.current_screen == GAME_SCREEN:
-                self.game.draw(self.screen)
+                self.game.draw(self.screen)  # Remove store_events call
 
             # Update display
             pygame.display.flip()

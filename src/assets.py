@@ -1,5 +1,6 @@
 import pygame
 import os
+import time
 
 
 class AssetManager:
@@ -29,7 +30,13 @@ class AssetManager:
         self.grass_texture = pygame.transform.scale(original_grass, scaled_size)
 
     def render_grass_sides(
-        self, screen, center_x, center_width, window_width, window_height
+        self,
+        screen,
+        center_x,
+        center_width,
+        window_width,
+        window_height,
+        editor_width=0,
     ):
         # Get grass tile size
         tile_width = self.grass_texture.get_width()
@@ -39,25 +46,24 @@ class AssetManager:
         left_area_width = center_x
         right_area_width = window_width - (center_x + center_width)
 
-        # Fill left side
-        for y in range(0, window_height, tile_height):
-            for x in range(0, left_area_width, tile_width):
-                screen.blit(self.grass_texture, (x, y))
-
-        # Fill right side
+        # Skip left side grass rendering
+        # Fill right side only
         right_start = center_x + center_width
         for y in range(0, window_height, tile_height):
             for x in range(right_start, window_width, tile_width):
                 screen.blit(self.grass_texture, (x, y))
 
-    def render_background(self, screen, x, y, width, height, padding=16):
-        # Draw grass texture first
+    def render_background(
+        self, screen, x, y, width, height, padding=16, editor_width=0
+    ):
+        # Draw grass texture only on right side
         self.render_grass_sides(
             screen,
             x - padding,
             width + (padding * 2),
             screen.get_width(),
             screen.get_height(),
+            editor_width,  # Pass editor width to avoid grass on left side
         )
 
         # Scale background to grid size plus padding on each side

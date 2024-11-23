@@ -1,4 +1,5 @@
 import pygame
+import os
 
 # Colors
 BLACK = (0, 0, 0)
@@ -12,8 +13,17 @@ class TitleScreen:
         self.window_width = window_width
         self.window_height = window_height
         self.font = pygame.font.Font(None, 40)
+        # Load background image
+        bg_path = os.path.join(os.path.dirname(__file__), "img", "title_background.png")
+        self.background = pygame.image.load(bg_path).convert()
+        self.background = pygame.transform.scale(
+            self.background, (window_width, window_height)
+        )
 
     def draw(self, screen):
+        # Draw background
+        screen.blit(self.background, (0, 0))
+
         # Draw title
         title = "The Robot has Taken Over!"
         title_surface = self.font.render(title, True, DARK_GRAY)
@@ -42,5 +52,31 @@ class TitleScreen:
         text_rect = text_surface.get_rect(center=button_rect.center)
         screen.blit(text_surface, text_rect)
 
-        # Return True if button is clicked
-        return button_hover and pygame.mouse.get_pressed()[0]
+        # Draw second button
+        button2_width = 200
+        button2_height = 50
+        button2_x = (self.window_width - button2_width) // 2
+        button2_y = 420
+        button2_rect = pygame.Rect(button2_x, button2_y, button2_width, button2_height)
+
+        # Check mouse hover for second button
+        button2_hover = button2_rect.collidepoint(mouse_pos)
+
+        # Draw second button with hover effect
+        pygame.draw.rect(
+            screen,
+            GRAY if button2_hover else LIGHT_GRAY,
+            button2_rect,
+            border_radius=10,
+        )
+
+        # Draw second button text
+        button2_text = "How to Play"
+        text2_surface = self.font.render(button2_text, True, BLACK)
+        text2_rect = text2_surface.get_rect(center=button2_rect.center)
+        screen.blit(text2_surface, text2_rect)
+
+        # Return True if either button is clicked
+        return (button_hover and pygame.mouse.get_pressed()[0]) or (
+            button2_hover and pygame.mouse.get_pressed()[0]
+        )

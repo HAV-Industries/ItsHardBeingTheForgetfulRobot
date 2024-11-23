@@ -1,6 +1,5 @@
 import pygame
 import os
-import time
 
 
 class AssetManager:
@@ -11,7 +10,15 @@ class AssetManager:
         self.last_grid_size = (0, 0)  # Changed from last_size
         self.grass_texture = None
         self.grass_scale = 20  # Scale factor for grass texture
+        self.crop_sprites = {}
+        self.crop_scales = {
+            "carrot": (50, 50),
+            "potato": (50, 50),
+            "wheat": (80, 80),  # Bigger scale for wheat
+        }
+        self.robot_sprite = None
         self.load_assets()
+        self.load_crop_sprites()
 
     def load_assets(self):
         # Load background tile
@@ -28,6 +35,40 @@ class AssetManager:
             original_size[1] * self.grass_scale,
         )
         self.grass_texture = pygame.transform.scale(original_grass, scaled_size)
+
+        # Load robot sprite
+        robot_path = os.path.join(self.assets_dir, "robot.png")
+        try:
+            self.robot_sprite = pygame.image.load(robot_path).convert_alpha()
+            self.robot_sprite = pygame.transform.scale(self.robot_sprite, (60, 60))
+        except pygame.error:
+            print(f"Could not load robot sprite: {robot_path}")
+            self.robot_sprite = None
+
+    def load_crop_sprites(self):
+        crops = {
+            "carrot": "carrot/sprite_carrot0.png",
+            "potato": "potato/sprite_potato0.png",
+            "wheat": "wheat/sprite_wheat0.png",
+        }
+
+        for crop_name, sprite_path in crops.items():
+            full_path = os.path.join(self.assets_dir, sprite_path)
+            try:
+                sprite = pygame.image.load(full_path).convert_alpha()
+                # Scale sprite according to crop type
+                scale = self.crop_scales.get(crop_name, (50, 50))
+                sprite = pygame.transform.scale(sprite, scale)
+                self.crop_sprites[crop_name] = sprite
+            except pygame.error:
+                print(f"Could not load sprite: {full_path}")
+                self.crop_sprites[crop_name] = None
+
+    def get_crop_sprite(self, crop_type):
+        return self.crop_sprites.get(crop_type)
+
+    def get_robot_sprite(self):
+        return self.robot_sprite
 
     def render_grass_sides(
         self,

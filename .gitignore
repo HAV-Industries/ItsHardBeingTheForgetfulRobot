@@ -2,3 +2,7 @@
 /env
 /.vscode
 */build
+*.pyc
+*.egg-info
+*-pygbag.???
+/dist

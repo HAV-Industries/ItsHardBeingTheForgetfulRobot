@@ -1,7 +1,2 @@
-# Counterspell 2024
-
-## 11.23.24
-
-### Vaed, Hitu, Alex
-
-[Google Doc](https://docs.google.com/document/d/1BUFfUq3yNrt3uyFbDY9kHkCVAsc1ZsMrfrleJ3awe-4/edit?tab=t.0)
+# ItsHardBeingTheForgetfulRobot
+It's Hard Being the Forgetful Robot - A PyGame based game inspired by The Farmer was Replaced, created by Vaed D, Hitu C, and Alex K in 12 hours during the Counterspell 2024 Hackathon

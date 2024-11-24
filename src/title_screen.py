@@ -7,6 +7,7 @@ BLACK = (0, 0, 0)
 GRAY = (128, 128, 128)
 LIGHT_GRAY = (192, 192, 192)
 DARK_GRAY = (64, 64, 64)
+BROWN = (149, 79, 29)
 
 
 class TitleScreen:
@@ -30,12 +31,21 @@ class TitleScreen:
 
         # Draw title
         title = "It's Hard Being the Forgetful Robot"
+        title_surface = self.font.render(title, True, BLACK)
+        title_rect = title_surface.get_rect(center=(self.window_width // 2, 200))
+
+        # Add background box for title
+        padding = 20  # Padding around text
+        box_rect = pygame.Rect(
+            title_rect.left - padding,
+            title_rect.top - padding,
+            title_rect.width + (padding * 2),
+            title_rect.height + (padding * 2),
+        )
+        pygame.draw.rect(screen, BROWN, box_rect, border_radius=10)
+        screen.blit(title_surface, title_rect)
 
         # Check if "How to Play" button is clicked
-
-        title_surface = self.font.render(title, True, DARK_GRAY)
-        title_rect = title_surface.get_rect(center=(self.window_width // 2, 200))
-        screen.blit(title_surface, title_rect)
 
         # Draw button
         button_width = 200

@@ -22,6 +22,7 @@ items = [
     "To delete an individual command, click on it",
     "If you write too many commands, you will forget what you wrote at the start",
     "You win once you get enough crops in 20 seconds",
+    "Beware of self-sabotage! Occasionally, your actions may hinder your progress.",
 ]
 
 
@@ -38,7 +39,7 @@ class Tutorial:
 
     def load_background(self):
         """Load and scale the background image."""
-        bg_path = os.path.join(os.path.dirname(__file__), "img", "title_background.png")
+        bg_path = os.path.join(os.path.dirname(__file__), "img", "start_bg.png")
         background = pygame.image.load(bg_path).convert()
         return pygame.transform.scale(
             background, (self.window_width, self.window_height)

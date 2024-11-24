@@ -3,6 +3,7 @@ import os
 
 
 BLACK = (0, 0, 0)
+WHITE = (255, 255, 255)
 GRAY = (128, 128, 128)
 LIGHT_GRAY = (192, 192, 192)
 DARK_GRAY = (64, 64, 64)
@@ -11,17 +12,19 @@ BROWN = (149, 79, 29)
 
 items = [
     "You are a robot",
-    "You forget stuff",
-    "You have a time limit (20 seconds)",
-    "You have to collect enough crops",
-    "You have to use buttons to write commands",
+    "You have been tasked to collect enough crops to feed the human race",
+    "You have a time limit of 20 seconds before the humans starve",
+    "You have to use buttons to write commands for your robot",
     "Commands program you to collect crops. (Keyboard shortcuts: arrow keys / spacebar also work)",
-    "Weeds increase your deviation chance and take your food.",
-    "Deviations make your instructions less accurate.",
-    "Use the run button to do your instructions",
-    "Use the reset button to erase all of your instructions. Or click on individual commands to delete them.",
     "You can only see your last 7 commands. You can't see or change any commands before that.",
-    "You win once you get enough crops in 20 seconds",
+    "Be careful. The more commands you add, the higher chance you have to forget them",
+    "You can only add 50 commands before you start forgetting them",
+    "Weeds increase your deviation chance and take your food.",
+    "Deviations make your instructions less accurate. You may end up somewhere you don't want to be.",
+    "When you are ready, click the 'Run' button to start the program.",
+    "Use the reset button to erase all of your instructions. Or click on individual commands to delete them.",
+    "You win once you get enough crops in 20 seconds. But you lose if you can't collect enough crops in time.",
+    "Good luck!",
 ]
 
 
@@ -38,7 +41,6 @@ class Tutorial:
         self.clicking = False
 
     def load_background(self):
-        """Load and scale the background image."""
         bg_path = os.path.join(os.path.dirname(__file__), "img", "title_background.png")
         background = pygame.image.load(bg_path)
         return pygame.transform.scale(
@@ -46,7 +48,6 @@ class Tutorial:
         )
 
     def draw(self, screen):
-        """Draw the current instruction and 'Next' button."""
 
         screen.blit(self.background, (0, 0))
 
@@ -68,7 +69,7 @@ class Tutorial:
 
         y_offset = box_rect.top + padding
         for line in lines:
-            instruction_surface = self.font.render(line, True, BLACK)
+            instruction_surface = self.font.render(line, True, WHITE)
             instruction_rect = instruction_surface.get_rect(
                 center=(self.window_width // 2, y_offset)
             )
@@ -90,7 +91,9 @@ class Tutorial:
             border_radius=10,
         )
 
-        button_text = "Next" if self.current_item_index < len(items) - 1 else "Finish"
+        button_text = (
+            "Next" if self.current_item_index < len(items) - 1 else "Start Game"
+        )
         button_surface = self.font.render(button_text, True, BLACK)
         button_rect_text = button_surface.get_rect(center=next_button_rect.center)
         screen.blit(button_surface, button_rect_text)

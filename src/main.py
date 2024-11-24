@@ -1,6 +1,5 @@
 """
 TODO:
-Add tutorial + the help menu
 """
 
 import pygame

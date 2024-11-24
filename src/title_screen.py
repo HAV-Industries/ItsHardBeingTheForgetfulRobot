@@ -4,10 +4,12 @@ from tutorial import Tutorial
 
 
 BLACK = (0, 0, 0)
+WHITE = (255, 255, 255)
 GRAY = (128, 128, 128)
 LIGHT_GRAY = (192, 192, 192)
 DARK_GRAY = (64, 64, 64)
 BROWN = (149, 79, 29)
+LIGHT_BROWN = (185, 100, 55)
 
 
 class TitleScreen:
@@ -17,6 +19,11 @@ class TitleScreen:
         self.font = pygame.font.Font(
             "./src/font/Press_Start_2P,Space_Mono/Press_Start_2P/PressStart2P-Regular.ttf",
             17,
+        )
+
+        self.font2 = pygame.font.Font(
+            "./src/font/Press_Start_2P,Space_Mono/Press_Start_2P/PressStart2P-Regular.ttf",
+            25,
         )
 
         bg_path = os.path.join(os.path.dirname(__file__), "img", "title_background.png")
@@ -30,7 +37,7 @@ class TitleScreen:
         screen.blit(self.background, (0, 0))
 
         title = "It's Hard Being the Forgetful Robot"
-        title_surface = self.font.render(title, True, BLACK)
+        title_surface = self.font2.render(title, True, WHITE)
         title_rect = title_surface.get_rect(center=(self.window_width // 2, 200))
 
         padding = 20
@@ -40,7 +47,8 @@ class TitleScreen:
             title_rect.width + (padding * 2),
             title_rect.height + (padding * 2),
         )
-        pygame.draw.rect(screen, BROWN, box_rect, border_radius=10)
+        pygame.draw.rect(screen, LIGHT_BROWN, box_rect, border_radius=10)
+
         screen.blit(title_surface, title_rect)
 
         button_width = 200

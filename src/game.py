@@ -103,22 +103,26 @@ class Game:
         random.shuffle(positions)
         selected_positions = positions[:cells_to_fill]
 
+        crop_weights = [3, 3, 3, 1]
         for x, y in selected_positions:
-            self.grid[y][x] = random.choice(crop_types)
+            self.grid[y][x] = random.choices(crop_types, weights=crop_weights, k=1)[0]
 
         self.initial_crop_count = cells_to_fill
 
     def spawn_weeds(self):
 
-        empty_cells = [
-            (x, y)
-            for y in range(self.grid_size)
-            for x in range(self.grid_size)
-            if self.grid[y][x] is None
-        ]
-        if empty_cells:
-            spawn_x, spawn_y = random.choice(empty_cells)
-            self.grid[spawn_y][spawn_x] = "weed"
+        max_weeds = 10
+        current_weeds = sum(row.count("weed") for row in self.grid)
+        if current_weeds < max_weeds:
+            empty_cells = [
+                (x, y)
+                for y in range(self.grid_size)
+                for x in range(self.grid_size)
+                if self.grid[y][x] is None
+            ]
+            if empty_cells:
+                spawn_x, spawn_y = random.choice(empty_cells)
+                self.grid[spawn_y][spawn_x] = "weed"
 
     def get_current_crop_count(self):
         return sum(
@@ -257,8 +261,9 @@ class Game:
             if self.grid[y][x]:
                 if self.grid[y][x] == "weed":
                     self.food_level -= 2
+                    self.food_level = max(self.food_level, 0)
                     self.deviation_count += 1
-                    self.weeds_touched += 1  # Add this line
+                    self.weeds_touched += 1
                 else:
                     self.grid[y][x] = None
                     self.food_level += 1

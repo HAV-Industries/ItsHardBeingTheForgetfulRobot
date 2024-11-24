@@ -4,6 +4,7 @@ import random
 import copy  # Added for deep copying the grid
 import time
 import tutorial
+import os
 
 # Colors
 BLACK = (0, 0, 0)
@@ -24,7 +25,12 @@ class Game:
         self.bg_padding = 67
         self.window_padding = 150
         self.panel_margin = 20  # Margin for the right panel
-        self.font = pygame.font.Font(None, 36)
+        self.font = pygame.font.Font(
+            "./src/font/Press_Start_2P,Space_Mono/Press_Start_2P/PressStart2P-Regular.ttf",
+            17,
+        )
+        # self.font = pygame.font.Font(None, 36)
+
         self.run_button_disabled = False  # Flag to disable run button after running
         self.instructions = []  # List to store movement instructions
         self.food_level = 0  # Initialize food level
@@ -39,6 +45,42 @@ class Game:
         self.button_size = 40
         self.clear_button_size = 30
         self.instruction_rects = []  # Store rectangles for instruction text
+        self.start_time = 0
+        self.elapsed_time = 0
+        self.timer_active = False
+        self.game_time = 20  # Starting time in seconds
+        self.game_over = False
+        self.deviation_count = 0  # Initialize deviation counter
+        self.game_win = False  # Add game win flag
+        self.initial_crop_count = 0  # Add this line to track initial number of crops
+
+        self.button_icons = {
+            "up": pygame.image.load(
+                os.path.join(os.path.dirname(__file__), "img", "arrow-up.png")
+            ),
+            "down": pygame.image.load(
+                os.path.join(os.path.dirname(__file__), "img", "arrow-down.png")
+            ),
+            "left": pygame.image.load(
+                os.path.join(os.path.dirname(__file__), "img", "arrow-left.png")
+            ),
+            "right": pygame.image.load(
+                os.path.join(os.path.dirname(__file__), "img", "arrow-right.png")
+            ),
+            "harvest": pygame.image.load(
+                os.path.join(os.path.dirname(__file__), "img", "basket.png")
+            ),
+        }
+        # Scale icons to fit buttons, with basket being larger
+        for key in self.button_icons:
+            if key == "harvest":
+                self.button_icons[key] = pygame.transform.scale(
+                    self.button_icons[key], (40, 40)
+                )  # Larger basket
+            else:
+                self.button_icons[key] = pygame.transform.scale(
+                    self.button_icons[key], (30, 30)
+                )  # Normal arrows
 
         # Initialize grid contents
         self.grid = [
@@ -54,17 +96,42 @@ class Game:
         self.reset_button = pygame.Rect(0, 0, 100, 40)
 
     def initialize_crops(self):
-        # Place random crops in about 1/3 of the grid spaces
-        crop_types = ["carrot", "potato", "wheat"]
-        cells_to_fill = (self.grid_size * self.grid_size) // 3
+        # Ensure at least 1/3 of the grid spaces are occupied by crops
+        crop_types = ["carrot", "potato", "wheat", "weed"]  # Include 'weed'
+        total_cells = self.grid_size * self.grid_size
+        cells_to_fill = total_cells // 3
 
-        for _ in range(cells_to_fill):
-            x = random.randint(0, self.grid_size - 1)
-            y = random.randint(0, self.grid_size - 1)
-            if self.grid[y][x] is None:  # Only fill empty cells
-                self.grid[y][x] = random.choice(
-                    crop_types
-                )  # Just store the crop type string
+        positions = [
+            (x, y) for x in range(self.grid_size) for y in range(self.grid_size)
+        ]
+        random.shuffle(positions)
+        selected_positions = positions[:cells_to_fill]
+
+        for x, y in selected_positions:
+            self.grid[y][x] = random.choice(crop_types)
+
+        # Store the initial number of crops
+        self.initial_crop_count = cells_to_fill
+
+    def spawn_weeds(self):
+        # Spawn a weed randomly on an empty cell
+        empty_cells = [
+            (x, y)
+            for y in range(self.grid_size)
+            for x in range(self.grid_size)
+            if self.grid[y][x] is None
+        ]
+        if empty_cells:
+            spawn_x, spawn_y = random.choice(empty_cells)
+            self.grid[spawn_y][spawn_x] = "weed"
+
+    def get_current_crop_count(self):
+        return sum(
+            1
+            for y in range(self.grid_size)
+            for x in range(self.grid_size)
+            if self.grid[y][x] is not None
+        )
 
     def get_cell_size(self):
         width_based = (self.window_width - self.window_padding) // self.grid_size
@@ -73,19 +140,19 @@ class Game:
 
     def create_dpad_buttons(self, panel_x, panel_y, panel_width):
         center_x = panel_x + panel_width // 2
-        center_y = panel_y + 170  # Moved DPAD down from 150 to 170
+        center_y = panel_y + 350
 
         # Create button rectangles
         self.buttons = {
             "up": pygame.Rect(
                 center_x - self.button_size // 2,
-                center_y - self.button_size * 1.2,
+                center_y - self.button_size * 1.67,
                 self.button_size,
                 self.button_size,
             ),
             "down": pygame.Rect(
                 center_x - self.button_size // 2,
-                center_y + self.button_size * 0.2,
+                center_y + self.button_size * 0.65,
                 self.button_size,
                 self.button_size,
             ),
@@ -126,12 +193,12 @@ class Game:
                     self.instructions.pop(actual_index)
                 return True
                 # Check How to Play button
-            
+
         # Check D-pad buttons
         for action, button in self.buttons.items():
             if button.collidepoint(pos):
                 self.instructions.append(action)
-                self.game.instructions = self.game.instructions[-50:]
+                self.instructions = self.instructions[-50:]
                 return True
 
         # Check Run button
@@ -140,6 +207,8 @@ class Game:
                 self.is_running = True
                 self.current_instruction_index = 0
                 self.run_button_disabled = True
+                self.start_time = time.time()  # Start the timer
+                self.timer_active = True
             return True
 
         # Check Reset button
@@ -160,9 +229,24 @@ class Game:
         self.food_level = 0  # Reset food level
         self.is_running = False  # Stop running
         self.current_instruction_index = 0  # Reset instruction index
+        self.start_time = 0
+        self.elapsed_time = 0
+        self.timer_active = False
+        self.deviation_count = 0  # Reset deviation count
+        self.game_win = False  # Reset game win flag
+        self.game_over = False
+        self.game_win = False  # Add this line
 
     def execute_instruction(self, instruction):
         x, y = self.robot_position
+
+        error_chance = len(self.instructions) / 1000
+        random_action_taken = False
+        if random.random() < error_chance:
+            instruction = random.choice(["up", "down", "left", "right", "harvest"])
+            self.deviation_count += 1  # Increment deviation count
+            random_action_taken = True
+
         if instruction == "up":
             if y > 0:
                 self.robot_position = (x, y - 1)
@@ -175,27 +259,82 @@ class Game:
         elif instruction == "right":
             if x < self.grid_size - 1:
                 self.robot_position = (x + 1, y)
-        elif instruction == "harvest":
+        elif instruction == "harvest" or random_action_taken:
+            if random_action_taken:
+                # If a random action was taken due to error
+                pass
+            else:
+                # Harvesting action
+                pass
             if self.grid[y][x]:
-                self.grid[y][x] = None
-                self.food_level += 1
+                if self.grid[y][x] == "weed":
+                    self.food_level -= 2  # Penalty for encountering weeds
+                    self.deviation_count += 1  # Additional penalty
+                    # Optionally play a negative sound effect
+                else:
+                    self.grid[y][x] = None
+                    self.food_level += 1
+                    # Play collect sound effect without affecting background music
+                    collect_sound = self.assets.get_collect_sound()
+                    if collect_sound:
+                        collect_sound.play()
         time.sleep(0.2)
+
+        # Only spawn a new crop if we're below the initial count
+        current_crops = self.get_current_crop_count()
+        if current_crops < self.initial_crop_count:
+            empty_cells = [
+                (x, y)
+                for y in range(self.grid_size)
+                for x in range(self.grid_size)
+                if self.grid[y][x] is None
+            ]
+            if empty_cells:
+                spawn_x, spawn_y = random.choice(empty_cells)
+                self.grid[spawn_y][spawn_x] = random.choice(
+                    ["carrot", "potato", "wheat", "weed"]  # Include 'weed' in spawn
+                )
 
     def draw_progress_bar(self, screen, x, y, width, height, progress):
         # Draw the background of the progress bar
         pygame.draw.rect(screen, WHITE, (x, y, width, height), border_radius=5)
         # Draw the progress
         inner_width = int(width * progress)
-        pygame.draw.rect(screen, BUTTON_COLOR, (x, y, inner_width, height), border_radius=5)
-    
+        pygame.draw.rect(
+            screen, BUTTON_HOVER, (x, y, inner_width, height), border_radius=5
+        )
+
     def update(self):
-        if self.is_running and self.current_instruction_index < len(self.instructions):
-            instruction = self.instructions[self.current_instruction_index]
-            self.execute_instruction(instruction)
-            self.current_instruction_index += 1
-            
-            if self.current_instruction_index >= len(self.instructions):
-                self.is_running = False
+        if self.is_running:
+            # Execute current instruction
+            if len(self.instructions) > 0:  # Only if there are instructions
+                instruction = self.instructions[self.current_instruction_index]
+                self.execute_instruction(instruction)
+
+                # Move to next instruction, loop back to start if at end
+                self.current_instruction_index = (
+                    self.current_instruction_index + 1
+                ) % len(self.instructions)
+
+            # Check timer
+            if self.timer_active:
+                current_time = time.time() - self.start_time
+                remaining_time = self.game_time - current_time
+                if remaining_time <= 0:
+                    # Check if food level requirement is met
+                    required_food = self.grid_size * self.grid_size // 4
+                    if self.food_level < required_food:
+                        self.game_over = True
+                    else:
+                        self.game_win = True  # Trigger win condition
+                    self.timer_active = False
+
+            # Spawn weeds every 10 seconds
+            if not hasattr(self, "last_weed_spawn"):
+                self.last_weed_spawn = time.time()
+            elif time.time() - self.last_weed_spawn > 10:
+                self.spawn_weeds()
+                self.last_weed_spawn = time.time()
 
     def draw(self, screen):
         # Calculate grid dimensions
@@ -217,43 +356,39 @@ class Game:
             0,  # No editor width needed
         )
 
-        # Draw grid lines
-        for i in range(self.grid_size + 1):
-            # Vertical lines
-            pygame.draw.line(
-                screen,
-                BLACK,
-                (start_x + i * cell_size, start_y),
-                (start_x + i * cell_size, start_y + grid_pixel_size),
-                2,
-            )
-            # Horizontal lines
-            pygame.draw.line(
-                screen,
-                BLACK,
-                (start_x, start_y + i * cell_size),
-                (start_x + grid_pixel_size, start_y + i * cell_size),
-                2,
-            )
+        # Remove or comment out grid lines drawing
+        # for i in range(self.grid_size + 1):
+        #     pygame.draw.line(...)
+        #     pygame.draw.line(...)
 
-        # Draw crops in grid (simplified)
+        # Draw crops in grid (including weeds)
         for y in range(self.grid_size):
             for x in range(self.grid_size):
                 if self.grid[y][x]:
                     crop_type = self.grid[y][x]  # Just the crop type string
-                    crop_sprite = self.assets.get_crop_sprite(crop_type)
-                    if crop_sprite:
+                    if crop_type == "weed":
+                        sprite = self.assets.weed_sprite
+                    else:
+                        sprite = self.assets.get_crop_sprite(crop_type)
+                    if sprite:
                         sprite_x = (
                             start_x
                             + (x * cell_size)
-                            + (cell_size - crop_sprite.get_width()) // 2
+                            + (cell_size - sprite.get_width()) // 2
                         )
                         sprite_y = (
                             start_y
                             + (y * cell_size)
-                            + (cell_size - crop_sprite.get_height()) // 2
+                            + (cell_size - sprite.get_height()) // 2
                         )
-                        screen.blit(crop_sprite, (sprite_x, sprite_y))
+
+                        # Add offset for wheat sprite
+                        if crop_type == "wheat":
+                            sprite_y -= (
+                                10  # Adjust this value to move wheat up more or less
+                            )
+
+                        screen.blit(sprite, (sprite_x, sprite_y))
 
         # Draw right panel
         panel_width = (
@@ -273,16 +408,24 @@ class Game:
         # Create and draw D-pad buttons
         self.create_dpad_buttons(panel_x, panel_y, panel_width)
 
-        # Draw buttons with hover effect
+        # Draw buttons with hover effect and icons (replace the text rendering section)
         mouse_pos = pygame.mouse.get_pos()
         for action, button in self.buttons.items():
-            color = BUTTON_HOVER if button.collidepoint(mouse_pos) else BUTTON_COLOR
+            # Special background color for harvest button
+            if action == "harvest":
+                color = (
+                    (100, 200, 200)
+                    if button.collidepoint(mouse_pos)
+                    else (75, 125, 150)
+                )  # Green shades
+            else:
+                color = BUTTON_HOVER if button.collidepoint(mouse_pos) else BUTTON_COLOR
             pygame.draw.rect(screen, color, button, border_radius=5)
 
-            # Draw button labels
-            text = self.font.render(action[0].upper(), True, WHITE)
-            text_rect = text.get_rect(center=button.center)
-            screen.blit(text, text_rect)
+            # Draw icon instead of text
+            icon = self.button_icons[action]
+            icon_rect = icon.get_rect(center=button.center)
+            screen.blit(icon, icon_rect)
 
         # Draw Run and Reset buttons
         if not self.is_running and not self.run_button_disabled:
@@ -301,9 +444,16 @@ class Game:
         # Draw Food Level counter
         food_text = self.font.render(f"Food Level: {self.food_level}", True, WHITE)
         food_rect = food_text.get_rect(
-            topright=(panel_x + panel_width - 10, panel_y + 60)
+            center=(panel_x + panel_width // 2, panel_y + 35)
         )
-        self.draw_progress_bar(screen, panel_x + 10, panel_y + 60, panel_width - 20, 30, self.food_level / (self.grid_size * self.grid_size // 3))
+        self.draw_progress_bar(
+            screen,
+            panel_x + 10,
+            panel_y + 55,
+            panel_width - 20,
+            30,
+            self.food_level / (self.grid_size * self.grid_size // 4),  # Reduced quota
+        )
         screen.blit(food_text, food_rect)
 
         # Draw instructions panel
@@ -373,6 +523,24 @@ class Game:
                 + (cell_size - robot_sprite.get_height()) // 2
             )
             screen.blit(robot_sprite, (robot_x, robot_y))
+
+        # Draw timer if active
+        if self.timer_active:
+            remaining_time = max(0, self.game_time - (time.time() - self.start_time))
+            timer_text = self.font.render(f"Time: {remaining_time:.1f}s", True, WHITE)
+            timer_rect = timer_text.get_rect(
+                center=(panel_x + panel_width // 2, panel_y + 100)
+            )
+            screen.blit(timer_text, timer_rect)
+
+            # Draw Deviation Count below the timer
+            deviation_text = self.font.render(
+                f"Deviations: {self.deviation_count}", True, WHITE
+            )
+            deviation_rect = deviation_text.get_rect(
+                center=(panel_x + panel_width // 2, panel_y + 130)
+            )
+            screen.blit(deviation_text, deviation_rect)
 
         # Call update method in the main loop
         self.update()

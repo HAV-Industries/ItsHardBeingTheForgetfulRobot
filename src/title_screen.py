@@ -13,7 +13,10 @@ class TitleScreen:
     def __init__(self, window_width, window_height):
         self.window_width = window_width
         self.window_height = window_height
-        self.font = pygame.font.Font(None, 40)
+        self.font = pygame.font.Font(
+            "./src/font/Press_Start_2P,Space_Mono/Press_Start_2P/PressStart2P-Regular.ttf",
+            17,
+        )
         # Load background image
         bg_path = os.path.join(os.path.dirname(__file__), "img", "title_background.png")
         self.background = pygame.image.load(bg_path).convert()
@@ -26,9 +29,7 @@ class TitleScreen:
         screen.blit(self.background, (0, 0))
 
         # Draw title
-        title = (
-            "It's Hard Being the Forgetful Robot | Es Difícil Ser el Robot Olvidadizo"
-        )
+        title = "It's Hard Being the Forgetful Robot"
 
         # Check if "How to Play" button is clicked
 
@@ -83,7 +84,7 @@ class TitleScreen:
         screen.blit(text2_surface, text2_rect)
 
         if button2_hover and pygame.mouse.get_pressed()[0]:
-            Tutorial().draw(screen)
+            Tutorial(self.window_width, self.window_height).draw(screen)
         # Return True if either button is clicked
         return (button_hover and pygame.mouse.get_pressed()[0]) or (
             button2_hover and pygame.mouse.get_pressed()[0]

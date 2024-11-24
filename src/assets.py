@@ -45,6 +45,22 @@ class AssetManager:
             print(f"Could not load robot sprite: {robot_path}")
             self.robot_sprite = None
 
+        # Load collect sound effect
+        collect_path = os.path.join(self.assets_dir, "../", "sfx", "collect.mp3")
+        try:
+            self.collect_sound = pygame.mixer.Sound(collect_path)
+        except pygame.error:
+            print(f"Could not load collect sound: {collect_path}")
+            self.collect_sound = None  # Handle missing sound gracefully
+
+        # Load weed sprite
+        self.weed_sprite = pygame.image.load(
+            os.path.join(self.assets_dir, "weeds", "weeds00.png")
+        ).convert_alpha()
+        self.weed_sprite = pygame.transform.scale(
+            self.weed_sprite, (40, 40)
+        )  # Adjust size as needed
+
     def load_crop_sprites(self):
         crops = {
             "carrot": "carrot/sprite_carrot0.png",
@@ -69,6 +85,9 @@ class AssetManager:
 
     def get_robot_sprite(self):
         return self.robot_sprite
+
+    def get_collect_sound(self):
+        return self.collect_sound
 
     def render_grass_sides(
         self,

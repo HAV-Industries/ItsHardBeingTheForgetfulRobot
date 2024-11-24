@@ -1,13 +1,6 @@
 """
 TODO:
- DONE - Currently the robot can run more than once. Make it so once you run, that's it and the run button is disabled until you reset.
 Add tutorial + the help menu
-Have crops slowly rot over time, despawn after 9 seconds
-If crops not collected in 5 seconds, they don't count towards total
-Add a timer
-Add min and max crop amounts
-Have crops spawn in empty spaces (Always 1/3 of spaces should be occupied)
-Have weeds spawn in empty spaces (decrease crop count bby 10%)
 """
 
 import pygame
@@ -15,16 +8,20 @@ import sys
 import os
 from title_screen import TitleScreen
 from game import Game
+from game_over_screen import *
+from game_win_screen import GameWinScreen  # Add this import
 import time
 
 
 # Constants
-WINDOW_WIDTH = 1280  # Changed from 1920
-WINDOW_HEIGHT = 720  # Changed from 1080
+WINDOW_WIDTH = 1280
+WINDOW_HEIGHT = 720
 
 # Game states
 TITLE_SCREEN = 0
 GAME_SCREEN = 1
+GAME_OVER = 2
+GAME_WIN = 3  # Add new game state
 
 
 class GameController:
@@ -39,9 +36,7 @@ class GameController:
         self.window_height = WINDOW_HEIGHT
         # Remove resizable flag
         self.screen = pygame.display.set_mode((self.window_width, self.window_height))
-        pygame.display.set_caption(
-            "It's Hard Being the Forgetful Robot | Es Difícil Ser el Robot Olvidadizo"
-        )
+        pygame.display.set_caption("It's Hard Being the Forgetful Robot")
 
         self.is_fullscreen = False
         self.current_screen = TITLE_SCREEN
@@ -49,6 +44,11 @@ class GameController:
         # Initialize screens
         self.title_screen = TitleScreen(self.window_width, self.window_height)
         self.game = Game(self.window_width, self.window_height)
+        self.game_over_screen = GameOverScreen(self.window_width, self.window_height)
+        self.game_win_screen = GameWinScreen(
+            self.window_width, self.window_height
+        )  # Initialize GameWinScreen
+        self.GAME_OVER = 2  # Add new game state
 
         self.clock = pygame.time.Clock()
 
@@ -113,7 +113,21 @@ class GameController:
                 if self.title_screen.draw(self.screen):
                     self.current_screen = GAME_SCREEN
             elif self.current_screen == GAME_SCREEN:
-                self.game.draw(self.screen)  # Remove store_events call
+                self.game.draw(self.screen)
+                if self.game.game_over:
+                    self.current_screen = GAME_OVER
+                elif self.game.game_win:
+                    self.current_screen = GAME_WIN  # Transition to win screen
+            elif self.current_screen == GAME_OVER:
+                if self.game_over_screen.draw(self.screen):
+                    # Reset game and return to game screen
+                    self.game = Game(self.window_width, self.window_height)
+                    self.current_screen = GAME_SCREEN
+            elif self.current_screen == GAME_WIN:
+                if self.game_win_screen.draw(self.screen):
+                    # Reset game and return to game screen
+                    self.game = Game(self.window_width, self.window_height)
+                    self.current_screen = GAME_SCREEN
 
             # Update display
             pygame.display.flip()
@@ -122,10 +136,10 @@ class GameController:
 
 if __name__ == "__main__":
     game = GameController()
-    """
-    pygame.mixer.music.load(
-        os.path.join(os.path.dirname(__file__), "music", "sfx/bg.mp3")
-    )
+
+    # Load and play background music
+    music_path = os.path.join(os.path.dirname(__file__), "sfx", "bg.mp3")
+    pygame.mixer.music.load(music_path)
     pygame.mixer.music.play(-1)  # Loop the music indefinitely
-    """
+
     game.run()

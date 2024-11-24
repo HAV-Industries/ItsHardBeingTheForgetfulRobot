@@ -2,6 +2,8 @@ import pygame
 from assets import AssetManager
 import random
 import copy  # Added for deep copying the grid
+import time
+import tutorial
 
 # Colors
 BLACK = (0, 0, 0)
@@ -23,12 +25,14 @@ class Game:
         self.window_padding = 150
         self.panel_margin = 20  # Margin for the right panel
         self.font = pygame.font.Font(None, 36)
+        self.run_button_disabled = False  # Flag to disable run button after running
         self.instructions = []  # List to store movement instructions
         self.food_level = 0  # Initialize food level
         self.robot_position = (
             self.grid_size - 1,
             self.grid_size - 1,
         )  # Start at bottom right
+        self.run_button_disabled = False  # Initialize run button state
         self.initial_grid = []  # To store initial grid for reset
         self.is_running = False  # Flag to check if instructions are being executed
         self.current_instruction_index = 0  # To track current instruction
@@ -44,6 +48,8 @@ class Game:
         self.initial_grid = copy.deepcopy(self.grid)  # Store initial grid
 
         # Create Run and Reset buttons
+
+        # Set spacebar as a shortcut for the harvest button
         self.run_button = pygame.Rect(0, 0, 100, 40)
         self.reset_button = pygame.Rect(0, 0, 100, 40)
 
@@ -119,23 +125,27 @@ class Game:
                 if 0 <= actual_index < len(self.instructions):
                     self.instructions.pop(actual_index)
                 return True
-
+                # Check How to Play button
+            
         # Check D-pad buttons
         for action, button in self.buttons.items():
             if button.collidepoint(pos):
                 self.instructions.append(action)
+                self.game.instructions = self.game.instructions[-50:]
                 return True
 
         # Check Run button
         if self.run_button.collidepoint(pos):
-            if not self.is_running:
+            if not self.is_running and not self.run_button_disabled:
                 self.is_running = True
                 self.current_instruction_index = 0
+                self.run_button_disabled = True
             return True
 
         # Check Reset button
         if self.reset_button.collidepoint(pos):
             self.reset_game()
+            self.run_button_disabled = False
             return True
 
         return False
@@ -169,13 +179,21 @@ class Game:
             if self.grid[y][x]:
                 self.grid[y][x] = None
                 self.food_level += 1
+        time.sleep(0.2)
 
+    def draw_progress_bar(self, screen, x, y, width, height, progress):
+        # Draw the background of the progress bar
+        pygame.draw.rect(screen, WHITE, (x, y, width, height), border_radius=5)
+        # Draw the progress
+        inner_width = int(width * progress)
+        pygame.draw.rect(screen, BUTTON_COLOR, (x, y, inner_width, height), border_radius=5)
+    
     def update(self):
         if self.is_running and self.current_instruction_index < len(self.instructions):
             instruction = self.instructions[self.current_instruction_index]
             self.execute_instruction(instruction)
             self.current_instruction_index += 1
-            # You can add a delay here if you want instructions to execute with time gaps
+            
             if self.current_instruction_index >= len(self.instructions):
                 self.is_running = False
 
@@ -267,7 +285,7 @@ class Game:
             screen.blit(text, text_rect)
 
         # Draw Run and Reset buttons
-        if not self.is_running:
+        if not self.is_running and not self.run_button_disabled:
             self.run_button.topleft = (panel_x + 10, panel_y + 10)
             pygame.draw.rect(screen, BUTTON_COLOR, self.run_button, border_radius=5)
             run_text = self.font.render("Run", True, WHITE)
@@ -285,6 +303,7 @@ class Game:
         food_rect = food_text.get_rect(
             topright=(panel_x + panel_width - 10, panel_y + 60)
         )
+        self.draw_progress_bar(screen, panel_x + 10, panel_y + 60, panel_width - 20, 30, self.food_level / (self.grid_size * self.grid_size // 3))
         screen.blit(food_text, food_rect)
 
         # Draw instructions panel
@@ -321,7 +340,7 @@ class Game:
 
         # Draw instructions list with numbers continuing from total count
         instruction_y = instructions_y + 10
-        visible_instructions = self.instructions[-8:]  # Get last 8 for display
+        visible_instructions = self.instructions[-7:]  # Get last 8 for display
         start_number = max(len(self.instructions) - len(visible_instructions), 0)
 
         for i, instruction in enumerate(visible_instructions):

@@ -1,7 +1,13 @@
 """
 TODO:
-Currently the robot can run more than once. Make it so once you run, that's it and the run button is disabled until you reset.
+ DONE - Currently the robot can run more than once. Make it so once you run, that's it and the run button is disabled until you reset.
 Add tutorial + the help menu
+Have crops slowly rot over time, despawn after 9 seconds
+If crops not collected in 5 seconds, they don't count towards total
+Add a timer
+Add min and max crop amounts
+Have crops spawn in empty spaces (Always 1/3 of spaces should be occupied)
+Have weeds spawn in empty spaces (decrease crop count bby 10%)
 """
 
 import pygame
@@ -79,6 +85,7 @@ class GameController:
                         pygame.K_DOWN,
                         pygame.K_LEFT,
                         pygame.K_RIGHT,
+                        pygame.K_SPACE,
                     ]:
                         direction = None
                         if event.key == pygame.K_UP:
@@ -89,8 +96,11 @@ class GameController:
                             direction = "left"
                         elif event.key == pygame.K_RIGHT:
                             direction = "right"
+                        elif event.key == pygame.K_SPACE:
+                            direction = "harvest"
                         if direction:
                             self.game.instructions.append(direction)
+                            self.game.instructions = self.game.instructions[-50:]
                 elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                     if self.current_screen == GAME_SCREEN:
                         self.game.handle_button_click(event.pos)

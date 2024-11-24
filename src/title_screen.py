@@ -1,5 +1,6 @@
 import pygame
 import os
+from tutorial import Tutorial
 
 # Colors
 BLACK = (0, 0, 0)
@@ -28,6 +29,9 @@ class TitleScreen:
         title = (
             "It's Hard Being the Forgetful Robot | Es Difícil Ser el Robot Olvidadizo"
         )
+
+        # Check if "How to Play" button is clicked
+
         title_surface = self.font.render(title, True, DARK_GRAY)
         title_rect = title_surface.get_rect(center=(self.window_width // 2, 200))
         screen.blit(title_surface, title_rect)
@@ -78,6 +82,8 @@ class TitleScreen:
         text2_rect = text2_surface.get_rect(center=button2_rect.center)
         screen.blit(text2_surface, text2_rect)
 
+        if button2_hover and pygame.mouse.get_pressed()[0]:
+            Tutorial().draw(screen)
         # Return True if either button is clicked
         return (button_hover and pygame.mouse.get_pressed()[0]) or (
             button2_hover and pygame.mouse.get_pressed()[0]

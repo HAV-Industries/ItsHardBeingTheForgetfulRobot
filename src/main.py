@@ -132,9 +132,8 @@ class GameController:
                     self.game = Game(self.window_width, self.window_height)
                     self.current_screen = GAME_SCREEN
             elif self.current_screen == TUTORIAL_SCREEN:
-                self.tutorial.draw(self.screen)
-
-                if pygame.mouse.get_pressed()[0]:
+                result = self.tutorial.draw(self.screen)
+                if result == "DONE":
                     self.current_screen = TITLE_SCREEN
 
             pygame.display.flip()

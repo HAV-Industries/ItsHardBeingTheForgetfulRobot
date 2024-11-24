@@ -6,20 +6,21 @@ BLACK = (0, 0, 0)
 GRAY = (128, 128, 128)
 LIGHT_GRAY = (192, 192, 192)
 DARK_GRAY = (64, 64, 64)
+BROWN = (149, 79, 29)
 
 
 items = [
     "You are a robot",
     "You forget stuff",
-    "You have a time limit",
-    "You have to collect crops",
-    "You can't collect too many crops",
-    "You can't collect too few crops",
-    "You have to use buttons to write commands to program yourself to collect crops (keyboard shortcuts: arrow keys / spacebar also work)",
-    "Use the run button to do your actions",
-    "Use the reset button to erase all of your code",
-    "To delete an individual command, click on it",
-    "If you write too many commands, you will forget what you wrote at the start",
+    "You have a time limit (20 seconds)",
+    "You have to collect enough crops",
+    "You have to use buttons to write commands",
+    "Commands program you to collect crops. (Keyboard shortcuts: arrow keys / spacebar also work)",
+    "Weeds increase your deviation chance and take your food.",
+    "Deviations make your instructions less accurate.",
+    "Use the run button to do your instructions",
+    "Use the reset button to erase all of your instructions. Or click on individual commands to delete them.",
+    "You can only see your last 7 commands. You can't see or change any commands before that.",
     "You win once you get enough crops in 20 seconds",
 ]
 
@@ -34,6 +35,7 @@ class Tutorial:
         )
         self.background = self.load_background()
         self.current_item_index = 0
+        self.clicking = False
 
     def load_background(self):
         """Load and scale the background image."""
@@ -49,11 +51,29 @@ class Tutorial:
         screen.blit(self.background, (0, 0))
 
         instruction = items[self.current_item_index]
-        instruction_surface = self.font.render(instruction, True, DARK_GRAY)
-        instruction_rect = instruction_surface.get_rect(
-            center=(self.window_width // 2, 200)
+        lines = instruction.split(". ")
+        padding = 20
+        total_height = sum(self.font.size(line)[1] for line in lines) + padding * (
+            len(lines) + 1
         )
-        screen.blit(instruction_surface, instruction_rect)
+        max_width = max(self.font.size(line)[0] for line in lines) + padding * 2
+
+        box_rect = pygame.Rect(
+            (self.window_width - max_width) // 2,
+            200 - total_height // 2,
+            max_width,
+            total_height,
+        )
+        pygame.draw.rect(screen, BROWN, box_rect, border_radius=10)
+
+        y_offset = box_rect.top + padding
+        for line in lines:
+            instruction_surface = self.font.render(line, True, BLACK)
+            instruction_rect = instruction_surface.get_rect(
+                center=(self.window_width // 2, y_offset)
+            )
+            screen.blit(instruction_surface, instruction_rect)
+            y_offset += self.font.size(line)[1] + padding
 
         button_width, button_height = 200, 50
         button_x = (self.window_width - button_width) // 2
@@ -75,8 +95,11 @@ class Tutorial:
         button_rect_text = button_surface.get_rect(center=next_button_rect.center)
         screen.blit(button_surface, button_rect_text)
 
-        if button_hover and pygame.mouse.get_pressed()[0]:
+        if button_hover and pygame.mouse.get_pressed()[0] and not self.clicking:
             if self.current_item_index < len(items) - 1:
                 self.current_item_index += 1
             else:
-                return
+                return "DONE"
+            self.clicking = True
+        elif not pygame.mouse.get_pressed()[0]:
+            self.clicking = False

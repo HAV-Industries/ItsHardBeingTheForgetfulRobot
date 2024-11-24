@@ -52,6 +52,7 @@ class Game:
         self.deviation_count = 0
         self.game_win = False
         self.initial_crop_count = 0
+        self.weeds_touched = 0
 
         self.button_icons = {
             "up": pygame.image.load(
@@ -228,7 +229,8 @@ class Game:
     def execute_instruction(self, instruction):
         x, y = self.robot_position
 
-        error_chance = len(self.instructions) / 1000
+        error_chance = (len(self.instructions) / 1000) - (self.weeds_touched * 100)
+
         random_action_taken = False
         if random.random() < error_chance:
             instruction = random.choice(["up", "down", "left", "right", "harvest"])
@@ -249,16 +251,14 @@ class Game:
                 self.robot_position = (x + 1, y)
         elif instruction == "harvest" or random_action_taken:
             if random_action_taken:
-
                 pass
             else:
-
                 pass
             if self.grid[y][x]:
                 if self.grid[y][x] == "weed":
                     self.food_level -= 2
                     self.deviation_count += 1
-
+                    self.weeds_touched += 1  # Add this line
                 else:
                     self.grid[y][x] = None
                     self.food_level += 1

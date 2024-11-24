@@ -22,7 +22,6 @@ items = [
     "To delete an individual command, click on it",
     "If you write too many commands, you will forget what you wrote at the start",
     "You win once you get enough crops in 20 seconds",
-    "Beware of self-sabotage! Occasionally, your actions may hinder your progress.",
 ]
 
 

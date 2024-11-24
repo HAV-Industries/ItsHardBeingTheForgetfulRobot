@@ -54,8 +54,6 @@ class Game:
         self.game_win = False  # Add game win flag
         self.initial_crop_count = 0  # Add this line to track initial number of crops
 
-        self.sabotage_penalty = 5  # Penalty to food level
-
         self.button_icons = {
             "up": pygame.image.load(
                 os.path.join(os.path.dirname(__file__), "img", "arrow-up.png")
@@ -297,15 +295,6 @@ class Game:
                     ["carrot", "potato", "wheat", "weed"]  # Include 'weed' in spawn
                 )
 
-        # Self-Sabotage Mechanic
-        if random.random() < self.self_sabotage_chance:
-            self.food_level -= self.sabotage_penalty
-            sabotage_text = "You accidentally sabotaged yourself!"
-            # Optionally, display sabotage_text somewhere or play a sound
-            # Example: print(sabotage_text)
-            print(sabotage_text)  # For debugging purposes
-            self.deviation_count += 1  # Increment deviation count
-
     def draw_progress_bar(self, screen, x, y, width, height, progress):
         # Draw the background of the progress bar
         pygame.draw.rect(screen, WHITE, (x, y, width, height), border_radius=5)
@@ -545,7 +534,6 @@ class Game:
             screen.blit(timer_text, timer_rect)
 
             # Draw Deviation Count below the timer
-        )
             deviation_text = self.font.render(
                 f"Deviations: {self.deviation_count}", True, WHITE
             )
@@ -553,29 +541,6 @@ class Game:
                 center=(panel_x + panel_width // 2, panel_y + 130)
             )
             screen.blit(deviation_text, deviation_rect)
-
-            # Draw Self-Sabotage Indicator
-            sabotage_indicator = self.font.render(
-                f"Self-Sabotages: {self.deviation_count}", True, WHITE
-            )
-            sabotage_rect = sabotage_indicator.get_rect(
-                center=(panel_x + panel_width // 2, panel_y + 160)
-            )
-            screen.blit(sabotage_indicator, sabotage_rect)
-
-        # Call update method in the main loop
-        self.update()
-
-        sabotage_rect = sabotage_indicator.get_rect(
-            center=(panel_x + panel_width // 2, panel_y + 160)
-        )
-        screen.blit(sabotage_indicator, sabotage_rect)
-
-        # Draw sabotage icon if any sabotages occurred
-        if self.deviation_count > 0 and self.assets.sabotage_icon:
-            icon_x = sabotage_rect.right + 10
-            icon_y = sabotage_rect.centery - self.assets.sabotage_icon.get_height() // 2
-            screen.blit(self.assets.sabotage_icon, (icon_x, icon_y))
 
         # Call update method in the main loop
         self.update()

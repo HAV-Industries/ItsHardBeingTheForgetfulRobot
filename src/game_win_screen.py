@@ -28,14 +28,6 @@ class GameWinScreen:
         text_rect = play_again_text.get_rect(center=button_rect.center)
         screen.blit(play_again_text, text_rect)
 
-        # Add victory message related to self-mastery
-        victory_text = "You mastered yourself and won!"
-        victory_surface = self.button_font.render(victory_text, True, (255, 255, 255))
-        victory_rect = victory_surface.get_rect(
-            center=(self.window_width // 2, self.window_height // 2 + 150)
-        )
-        screen.blit(victory_surface, victory_rect)
-
         # Check for button click
         mouse_pos = pygame.mouse.get_pos()
         mouse_clicked = pygame.mouse.get_pressed()[0]

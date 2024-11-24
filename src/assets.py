@@ -17,7 +17,6 @@ class AssetManager:
             "wheat": (80, 80),  # Bigger scale for wheat
         }
         self.robot_sprite = None
-        self.sabotage_icon = self.load_sabotage_icon()
         self.load_assets()
         self.load_crop_sprites()
 
@@ -61,16 +60,6 @@ class AssetManager:
         self.weed_sprite = pygame.transform.scale(
             self.weed_sprite, (40, 40)
         )  # Adjust size as needed
-
-    def load_sabotage_icon(self):
-        sabotage_path = os.path.join(self.assets_dir, "sabotage_icon.png")
-        try:
-            sabotage_sprite = pygame.image.load(sabotage_path).convert_alpha()
-            sabotage_sprite = pygame.transform.scale(sabotage_sprite, (30, 30))
-            return sabotage_sprite
-        except pygame.error:
-            print(f"Could not load sabotage icon: {sabotage_path}")
-            return None
 
     def load_crop_sprites(self):
         crops = {

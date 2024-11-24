@@ -19,14 +19,6 @@ class GameOverScreen:
         )
         screen.blit(game_over_text, text_rect)
 
-        # Add reason for game over
-        reason_text = "You sabotaged yourself too much!"
-        reason_surface = self.button_font.render(reason_text, True, (255, 255, 255))
-        reason_rect = reason_surface.get_rect(
-            center=(self.window_width // 2, self.window_height // 2 + 70)
-        )
-        screen.blit(reason_surface, reason_rect)
-
         # Draw "Try Again" button
         button_rect = pygame.Rect(0, 0, 200, 50)
         button_rect.center = (self.window_width // 2, self.window_height // 2 + 100)

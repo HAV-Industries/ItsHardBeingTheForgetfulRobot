@@ -9,46 +9,45 @@ import os
 from title_screen import TitleScreen
 from game import Game
 from game_over_screen import *
-from game_win_screen import GameWinScreen  # Add this import
+from game_win_screen import GameWinScreen
+from tutorial import Tutorial
 import time
 
 
-# Constants
 WINDOW_WIDTH = 1280
 WINDOW_HEIGHT = 720
 
-# Game states
+
 TITLE_SCREEN = 0
 GAME_SCREEN = 1
 GAME_OVER = 2
-GAME_WIN = 3  # Add new game state
+GAME_WIN = 3
+TUTORIAL_SCREEN = 4
 
 
 class GameController:
     def __init__(self):
         pygame.init()
-        # Set game icon
+
         icon_path = os.path.join(os.path.dirname(__file__), "img", "icon.png")
         icon = pygame.image.load(icon_path)
         pygame.display.set_icon(icon)
 
         self.window_width = WINDOW_WIDTH
         self.window_height = WINDOW_HEIGHT
-        # Remove resizable flag
+
         self.screen = pygame.display.set_mode((self.window_width, self.window_height))
         pygame.display.set_caption("It's Hard Being the Forgetful Robot")
 
         self.is_fullscreen = False
         self.current_screen = TITLE_SCREEN
 
-        # Initialize screens
         self.title_screen = TitleScreen(self.window_width, self.window_height)
         self.game = Game(self.window_width, self.window_height)
         self.game_over_screen = GameOverScreen(self.window_width, self.window_height)
-        self.game_win_screen = GameWinScreen(
-            self.window_width, self.window_height
-        )  # Initialize GameWinScreen
-        self.GAME_OVER = 2  # Add new game state
+        self.game_win_screen = GameWinScreen(self.window_width, self.window_height)
+        self.tutorial = Tutorial(self.window_width, self.window_height)
+        self.GAME_OVER = 2
 
         self.clock = pygame.time.Clock()
 
@@ -63,13 +62,12 @@ class GameController:
                 (self.window_width, self.window_height)
             )
 
-        # Update screen dimensions for both game states
         self.title_screen = TitleScreen(self.window_width, self.window_height)
         self.game = Game(self.window_width, self.window_height)
 
     def run(self):
         while True:
-            # Event handling
+
             events = pygame.event.get()
             for event in events:
                 if event.type == pygame.QUIT:
@@ -104,32 +102,41 @@ class GameController:
                 elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                     if self.current_screen == GAME_SCREEN:
                         self.game.handle_button_click(event.pos)
+                    elif self.current_screen == TUTORIAL_SCREEN:
 
-            # Clear screen
+                        pass
+
             self.screen.fill((255, 255, 255))
 
-            # Update and draw current screen
             if self.current_screen == TITLE_SCREEN:
-                if self.title_screen.draw(self.screen):
-                    self.current_screen = GAME_SCREEN
+                result = self.title_screen.draw(self.screen)
+                if isinstance(result, str):
+                    if result == "GAME_SCREEN":
+                        self.current_screen = GAME_SCREEN
+                    elif result == "TUTORIAL_SCREEN":
+                        self.current_screen = TUTORIAL_SCREEN
             elif self.current_screen == GAME_SCREEN:
                 self.game.draw(self.screen)
                 if self.game.game_over:
                     self.current_screen = GAME_OVER
                 elif self.game.game_win:
-                    self.current_screen = GAME_WIN  # Transition to win screen
+                    self.current_screen = GAME_WIN
             elif self.current_screen == GAME_OVER:
                 if self.game_over_screen.draw(self.screen):
-                    # Reset game and return to game screen
+
                     self.game = Game(self.window_width, self.window_height)
                     self.current_screen = GAME_SCREEN
             elif self.current_screen == GAME_WIN:
                 if self.game_win_screen.draw(self.screen):
-                    # Reset game and return to game screen
+
                     self.game = Game(self.window_width, self.window_height)
                     self.current_screen = GAME_SCREEN
+            elif self.current_screen == TUTORIAL_SCREEN:
+                self.tutorial.draw(self.screen)
 
-            # Update display
+                if pygame.mouse.get_pressed()[0]:
+                    self.current_screen = TITLE_SCREEN
+
             pygame.display.flip()
             self.clock.tick(60)
 
@@ -137,9 +144,8 @@ class GameController:
 if __name__ == "__main__":
     game = GameController()
 
-    # Load and play background music
     music_path = os.path.join(os.path.dirname(__file__), "sfx", "bg.mp3")
     pygame.mixer.music.load(music_path)
-    pygame.mixer.music.play(-1)  # Loop the music indefinitely
+    pygame.mixer.music.play(-1)
 
     game.run()

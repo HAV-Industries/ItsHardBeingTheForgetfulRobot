@@ -7,26 +7,26 @@ class AssetManager:
         self.assets_dir = os.path.join(os.path.dirname(__file__), "img")
         self.background = None
         self.scaled_background = None
-        self.last_grid_size = (0, 0)  # Changed from last_size
+        self.last_grid_size = (0, 0)
         self.grass_texture = None
-        self.grass_scale = 20  # Scale factor for grass texture
+        self.grass_scale = 20
         self.crop_sprites = {}
         self.crop_scales = {
             "carrot": (50, 50),
             "potato": (50, 50),
-            "wheat": (80, 80),  # Bigger scale for wheat
+            "wheat": (80, 80),
         }
         self.robot_sprite = None
         self.load_assets()
         self.load_crop_sprites()
 
     def load_assets(self):
-        # Load background tile
+
         bg_path = os.path.join(self.assets_dir, "robotfarm_bg1.png")
         self.background = pygame.image.load(bg_path).convert()
-        # Store original background for scaling
+
         self.original_background = self.background
-        # Load and scale grass texture
+
         grass_path = os.path.join(self.assets_dir, "grass.png")
         original_grass = pygame.image.load(grass_path).convert()
         original_size = original_grass.get_size()
@@ -36,7 +36,6 @@ class AssetManager:
         )
         self.grass_texture = pygame.transform.scale(original_grass, scaled_size)
 
-        # Load robot sprite
         robot_path = os.path.join(self.assets_dir, "robot.png")
         try:
             self.robot_sprite = pygame.image.load(robot_path).convert_alpha()
@@ -45,21 +44,17 @@ class AssetManager:
             print(f"Could not load robot sprite: {robot_path}")
             self.robot_sprite = None
 
-        # Load collect sound effect
         collect_path = os.path.join(self.assets_dir, "../", "sfx", "collect.mp3")
         try:
             self.collect_sound = pygame.mixer.Sound(collect_path)
         except pygame.error:
             print(f"Could not load collect sound: {collect_path}")
-            self.collect_sound = None  # Handle missing sound gracefully
+            self.collect_sound = None
 
-        # Load weed sprite
         self.weed_sprite = pygame.image.load(
             os.path.join(self.assets_dir, "weeds", "weeds00.png")
         ).convert_alpha()
-        self.weed_sprite = pygame.transform.scale(
-            self.weed_sprite, (40, 40)
-        )  # Adjust size as needed
+        self.weed_sprite = pygame.transform.scale(self.weed_sprite, (40, 40))
 
     def load_crop_sprites(self):
         crops = {
@@ -72,7 +67,7 @@ class AssetManager:
             full_path = os.path.join(self.assets_dir, sprite_path)
             try:
                 sprite = pygame.image.load(full_path).convert_alpha()
-                # Scale sprite according to crop type
+
                 scale = self.crop_scales.get(crop_name, (50, 50))
                 sprite = pygame.transform.scale(sprite, scale)
                 self.crop_sprites[crop_name] = sprite
@@ -98,16 +93,13 @@ class AssetManager:
         window_height,
         editor_width=0,
     ):
-        # Get grass tile size
+
         tile_width = self.grass_texture.get_width()
         tile_height = self.grass_texture.get_height()
 
-        # Calculate areas to fill
         left_area_width = center_x
         right_area_width = window_width - (center_x + center_width)
 
-        # Skip left side grass rendering
-        # Fill right side only
         right_start = center_x + center_width
         for y in range(0, window_height, tile_height):
             for x in range(right_start, window_width, tile_width):
@@ -116,30 +108,26 @@ class AssetManager:
     def render_background(
         self, screen, x, y, width, height, padding=16, editor_width=0
     ):
-        # Draw grass texture only on right side
+
         self.render_grass_sides(
             screen,
             x - padding,
             width + (padding * 2),
             screen.get_width(),
             screen.get_height(),
-            editor_width,  # Pass editor width to avoid grass on left side
+            editor_width,
         )
 
-        # Scale background to grid size plus padding on each side
         scaled_width = width + (padding * 2)
         scaled_height = height + (padding * 2)
 
-        # Adjust position to account for padding
         padded_x = x - padding
         padded_y = y - padding
 
-        # Only rescale if grid size changed
         if (scaled_width, scaled_height) != self.last_grid_size:
             self.scaled_background = pygame.transform.scale(
                 self.original_background, (scaled_width, scaled_height)
             )
             self.last_grid_size = (scaled_width, scaled_height)
 
-        # Draw the scaled background at padded position
         screen.blit(self.scaled_background, (padded_x, padded_y))
